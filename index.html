@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pagos Red</title>
+<style>
+  :root {
+    --bg: #0f1117; --surface: #1a1d27; --surface2: #232736; --border: #2e3347;
+    --accent: #4f8ef7; --green: #22c55e; --green-bg: #14532d33;
+    --red: #ef4444; --red-bg: #7f1d1d33; --yellow: #f59e0b; --yellow-bg: #78350f33;
+    --text: #e2e8f0; --text2: #94a3b8; --text3: #64748b;
+    --radius: 10px; --font: 'Segoe UI', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
+
+  /* LOGIN */
+  #login-screen {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at 60% 30%, #1e2a4a 0%, #0f1117 70%);
+  }
+  .login-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 40px 36px; width: 100%; max-width: 380px;
+    box-shadow: 0 24px 64px #00000060;
+  }
+  .login-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
+  .login-logo svg { color: var(--accent); }
+  .login-logo span { font-size: 1.3rem; font-weight: 700; letter-spacing: -0.5px; }
+  .login-subtitle { color: var(--text2); font-size: 0.875rem; margin-bottom: 28px; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 0.8rem; color: var(--text2); margin-bottom: 6px; font-weight: 500; }
+  .form-group input {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    color: var(--text); border-radius: 8px; padding: 10px 14px; font-size: 0.95rem;
+    outline: none; transition: border-color .2s;
+  }
+  .form-group input:focus { border-color: var(--accent); }
+  .btn-primary {
+    width: 100%; background: var(--accent); color: #fff; border: none;
+    border-radius: 8px; padding: 11px; font-size: 0.95rem; font-weight: 600;
+    cursor: pointer; margin-top: 8px; transition: opacity .2s;
+  }
+  .btn-primary:hover { opacity: .88; }
+  .login-error {
+    background: var(--red-bg); border: 1px solid var(--red); color: var(--red);
+    border-radius: 8px; padding: 10px 14px; font-size: 0.85rem; margin-top: 14px; display: none;
+  }
+
+  /* APP */
+  #app { display: none; }
+  header {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 0 24px; height: 58px; display: flex; align-items: center;
+    justify-content: space-between; position: sticky; top: 0; z-index: 100;
+  }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .header-logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.05rem; }
+  .header-logo svg { color: var(--accent); }
+  .year-select {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); border-radius: 8px; padding: 5px 10px;
+    font-size: 0.9rem; cursor: pointer; outline: none;
+  }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .btn-add {
+    background: var(--accent); color: #fff; border: none; border-radius: 8px;
+    padding: 7px 14px; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; gap: 6px; transition: opacity .2s;
+  }
+  .btn-add:hover { opacity: .88; }
+  .btn-toggle-inactive {
+    background: transparent; border: 1px solid var(--border); color: var(--text2);
+    border-radius: 8px; padding: 7px 14px; font-size: 0.85rem; cursor: pointer; transition: border-color .2s;
+  }
+  .btn-toggle-inactive:hover { border-color: var(--text2); }
+  .btn-toggle-inactive.active { border-color: var(--accent); color: var(--accent); }
+  .btn-logout {
+    background: transparent; border: 1px solid var(--border); color: var(--text2);
+    border-radius: 8px; padding: 7px 14px; font-size: 0.85rem; cursor: pointer; transition: border-color .2s;
+  }
+  .btn-logout:hover { border-color: var(--text2); }
+
+  main { padding: 24px; max-width: 1200px; margin: 0 auto; }
+
+  /* SUMMARY */
+  .summary-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; }
+  .summary-card .label { font-size: 0.75rem; color: var(--text2); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .5px; }
+  .summary-card .value { font-size: 1.5rem; font-weight: 700; }
+  .summary-card .value.green { color: var(--green); }
+  .summary-card .value.red { color: var(--red); }
+  .summary-card .value.blue { color: var(--accent); }
+
+  /* TABS */
+  .tabs { display: flex; gap: 4px; margin-bottom: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 4px; width: fit-content; }
+  .tab-btn { background: transparent; border: none; color: var(--text2); padding: 7px 18px; border-radius: 7px; cursor: pointer; font-size: 0.875rem; font-weight: 500; transition: all .15s; }
+  .tab-btn.active { background: var(--accent); color: #fff; }
+
+  /* SEARCH */
+  .search-wrap { position: relative; margin-bottom: 20px; max-width: 380px; }
+  .search-wrap input {
+    width: 100%; background: var(--surface); border: 1px solid var(--border);
+    color: var(--text); border-radius: var(--radius); padding: 10px 14px 10px 38px;
+    font-size: 0.9rem; outline: none; transition: border-color .2s;
+  }
+  .search-wrap input:focus { border-color: var(--accent); }
+  .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text3); pointer-events: none; }
+  .autocomplete-dropdown {
+    position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius); z-index: 200; display: none; max-height: 220px; overflow-y: auto;
+  }
+  .autocomplete-item { padding: 10px 14px; cursor: pointer; font-size: 0.875rem; transition: background .1s; border-bottom: 1px solid var(--border); }
+  .autocomplete-item:last-child { border-bottom: none; }
+  .autocomplete-item:hover { background: var(--border); }
+
+  /* CARDS */
+  #clients-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+  .client-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: border-color .2s; }
+  .client-card:hover { border-color: var(--accent); }
+  .client-card-header { padding: 16px 18px 12px; display: flex; justify-content: space-between; align-items: flex-start; cursor: pointer; }
+  .client-card-header:hover .client-name { color: var(--accent); }
+  .client-name { font-weight: 700; font-size: 1rem; margin-bottom: 4px; transition: color .15s; }
+  .client-meta { font-size: 0.75rem; color: var(--text2); line-height: 1.6; }
+  .client-badge { font-size: 0.7rem; font-weight: 600; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: .4px; }
+  .badge-active { background: var(--green-bg); color: var(--green); }
+  .badge-inactive { background: var(--red-bg); color: var(--red); }
+  .badge-debt { background: var(--red-bg); color: var(--red); font-size: 0.6rem; padding: 2px 8px; border-radius: 20px; margin-left: 6px; font-weight: 700; }
+  .client-plan-row { padding: 0 18px 12px; display: flex; justify-content: space-between; align-items: center; }
+  .plan-name { font-size: 0.8rem; color: var(--text2); }
+  .plan-cuota { font-size: 1.1rem; font-weight: 700; color: var(--accent); }
+  .months-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; padding: 12px 18px; border-top: 1px solid var(--border); }
+  .month-cell {
+    aspect-ratio: 1; border-radius: 6px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; cursor: pointer;
+    font-size: 0.6rem; font-weight: 600; text-transform: uppercase;
+    transition: transform .1s, filter .1s; user-select: none;
+  }
+  .month-cell:hover { transform: scale(1.08); filter: brightness(1.15); }
+  .month-cell.paid    { background: var(--green-bg);  color: var(--green);  border: 1px solid #22c55e44; }
+  .month-cell.pending { background: var(--red-bg);    color: var(--red);    border: 1px solid #ef444444; }
+  .month-cell.partial { background: var(--yellow-bg); color: var(--yellow); border: 1px solid #f59e0b44; }
+  .month-cell.paused  { background: #1e293b; color: var(--text3); border: 1px solid #334155; }
+  .month-cell.before-start { background: transparent; color: var(--text3); border: 1px solid transparent; cursor: default; opacity: .35; }
+  .month-cell.future  { background: var(--surface2); color: var(--text3); border: 1px solid var(--border); }
+  .month-cell.future:hover { border-color: var(--accent); color: var(--accent); }
+  .month-cell .month-label  { line-height: 1; }
+  .month-cell .month-amount { font-size: 0.55rem; margin-top: 2px; opacity: .8; }
+  .client-card-footer { padding: 10px 18px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .footer-totals { font-size: 0.78rem; color: var(--text2); }
+  .footer-totals span { font-weight: 700; }
+  .footer-totals .paid-total { color: var(--green); }
+  .footer-totals .pending-total { color: var(--red); }
+  .btn-edit-client { background: transparent; border: 1px solid var(--border); color: var(--text2); border-radius: 6px; padding: 5px 12px; font-size: 0.78rem; cursor: pointer; transition: border-color .2s; }
+  .btn-edit-client:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* TABLE */
+  #table-view { display: none; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  thead tr { background: var(--surface2); }
+  th, td { padding: 10px 12px; text-align: center; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  th { color: var(--text2); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: .4px; }
+  td:first-child, th:first-child { text-align: left; }
+  tbody tr:hover { background: var(--surface2); }
+  .cell-paid    { color: var(--green);  font-weight: 600; }
+  .cell-pending { color: var(--red); }
+  .cell-partial { color: var(--yellow); font-weight: 600; }
+  .cell-paused  { color: var(--text3); }
+  .cell-future  { color: var(--text3); }
+  tfoot td { font-weight: 700; color: var(--accent); background: var(--surface2); }
+
+  /* MODALS */
+  .modal-overlay { position: fixed; inset: 0; background: #00000088; z-index: 500; display: none; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; width: 100%; max-width: 440px; box-shadow: 0 32px 80px #00000070; animation: modal-in .18s ease; }
+  @keyframes modal-in { from { opacity: 0; transform: scale(.96) translateY(8px); } to { opacity: 1; transform: none; } }
+  .modal-header { padding: 20px 22px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .modal-title { font-weight: 700; font-size: 1rem; }
+  .modal-close { background: transparent; border: none; color: var(--text2); cursor: pointer; font-size: 1.2rem; line-height: 1; padding: 4px; border-radius: 4px; transition: color .15s; }
+  .modal-close:hover { color: var(--text); }
+  .modal-body { padding: 20px 22px; }
+  .modal-footer { padding: 16px 22px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+  .btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: 8px 18px; font-size: 0.875rem; cursor: pointer; }
+  .btn-secondary:hover { border-color: var(--text2); }
+  .btn-danger { background: var(--red-bg); border: 1px solid var(--red); color: var(--red); border-radius: 8px; padding: 8px 18px; font-size: 0.875rem; cursor: pointer; margin-right: auto; }
+  .btn-sm { padding: 3px 10px; font-size: 0.7rem; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text2); cursor: pointer; transition: border-color .2s; }
+  .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-sm.danger:hover { border-color: var(--red); color: var(--red); }
+
+  /* PAY MODAL */
+  .pay-context { background: var(--surface2); border-radius: 8px; padding: 14px 16px; margin-bottom: 16px; }
+  .pay-context-name { font-weight: 700; font-size: 1rem; margin-bottom: 4px; }
+  .pay-context-sub { font-size: 0.8rem; color: var(--text2); }
+  .pay-context-sub span { color: var(--accent); font-weight: 600; }
+  .monto-row { display: flex; align-items: center; gap: 10px; }
+  .monto-row input { flex: 1; background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 10px 14px; font-size: 1.1rem; font-weight: 700; outline: none; transition: border-color .2s; }
+  .monto-row input:focus { border-color: var(--accent); }
+  .check-row { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
+  .check-row input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+  .check-row label { font-size: 0.875rem; color: var(--text2); cursor: pointer; }
+
+  /* CLIENT MODAL */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-grid .span2 { grid-column: span 2; }
+  .mg { margin-bottom: 0; }
+  .mg label { display: block; font-size: 0.78rem; color: var(--text2); margin-bottom: 5px; font-weight: 500; }
+  .mg input, .mg select { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 9px 12px; font-size: 0.875rem; outline: none; transition: border-color .2s; }
+  .mg input:focus, .mg select:focus { border-color: var(--accent); }
+  .mg select option { background: var(--surface2); }
+
+  /* TOAST */
+  #toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 10px; padding: 12px 20px; font-size: 0.875rem; z-index: 900; transform: translateY(80px); opacity: 0; transition: all .25s; pointer-events: none; }
+  #toast.show { transform: none; opacity: 1; }
+  #toast.success { border-color: var(--green); color: var(--green); }
+  #toast.error   { border-color: var(--red);   color: var(--red); }
+
+  /* LOADING */
+  #loading { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+  .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loading.hide { display: none; }
+
+  /* EMPTY */
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--text2); }
+  .empty-state svg { color: var(--text3); margin-bottom: 12px; }
+  .empty-state p { font-size: 0.9rem; }
+
+  /* DETALLE CLIENTE */
+  .detalle-cliente-info { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; background: var(--surface2); padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; }
+  .detalle-cliente-info .item { font-size: 0.8rem; color: var(--text2); }
+  .detalle-cliente-info .item span { color: var(--text); font-weight: 600; }
+  .detalle-meses-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin: 12px 0; }
+  .detalle-meses-grid .month-cell { aspect-ratio: auto; padding: 6px 0; font-size: 0.65rem; }
+  .detalle-deuda-antigua { margin-top: 16px; border-top: 1px solid var(--border); padding-top: 12px; }
+  .detalle-deuda-antigua h4 { font-size: 0.8rem; color: var(--red); margin-bottom: 8px; }
+
+  /* DETALLE MES */
+  .detalle-mes-pagos { background: var(--surface2); border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; }
+  .detalle-mes-pagos .pago-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 0.8rem; }
+  .detalle-mes-pagos .pago-item:last-child { border-bottom: none; }
+  .detalle-mes-pagos .pago-item .codigo { color: var(--accent); font-weight: 600; }
+  .detalle-mes-pagos .pago-item .monto  { font-weight: 700; }
+  .detalle-mes-pagos .pago-item .fecha  { color: var(--text3); }
+  .detalle-mes-pagos .pago-item .acciones { display: flex; gap: 4px; }
+  .detalle-mes-totales { display: flex; justify-content: space-between; font-size: 0.9rem; background: var(--bg); border-radius: 8px; padding: 10px 14px; margin-top: 8px; }
+  .detalle-mes-totales .restante { color: var(--yellow); }
+  .badge-pausado { display: inline-block; background: #1e293b; color: var(--text3); padding: 2px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; }
+
+  /* RECEIPT */
+  #modal-receipt .modal { max-width: 360px; }
+  .receipt-body { padding: 24px; font-family: 'Courier New', monospace; }
+  .receipt-header { text-align: center; border-bottom: 2px dashed var(--border); padding-bottom: 16px; margin-bottom: 16px; }
+  .receipt-brand { font-size: 1.1rem; font-weight: 700; letter-spacing: 2px; }
+  .receipt-sub { font-size: 0.75rem; color: var(--text2); margin-top: 4px; }
+  .receipt-row { display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 8px; }
+  .receipt-row .rlabel { color: var(--text2); }
+  .receipt-row .rval { font-weight: 600; }
+  .receipt-divider { border: none; border-top: 1px dashed var(--border); margin: 12px 0; }
+  .receipt-total { display: flex; justify-content: space-between; font-size: 1rem; font-weight: 700; margin-top: 8px; }
+  .receipt-total .rval { color: var(--green); }
+  .receipt-footer { text-align: center; font-size: 0.7rem; color: var(--text3); margin-top: 16px; border-top: 2px dashed var(--border); padding-top: 12px; }
+  .receipt-folio { font-size: 0.65rem; color: var(--text3); text-align: center; margin-top: 6px; letter-spacing: 1px; }
+  .btn-print { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 8px 22px; font-size: 0.875rem; font-weight: 600; cursor: pointer; }
+  @media print {
+    body > *:not(#modal-receipt) { display: none !important; }
+    #modal-receipt { position: static !important; background: white !important; }
+    #modal-receipt .modal { border: none !important; box-shadow: none !important; max-width: 100% !important; background: white !important; color: black !important; }
+    .modal-header, .modal-footer { display: none !important; }
+    .receipt-body { color: black !important; }
+    .receipt-body * { color: black !important; border-color: #aaa !important; }
+  }
+
+  @media (max-width: 600px) {
+    main { padding: 16px; }
+    #clients-grid { grid-template-columns: 1fr; }
+    .summary-bar { grid-template-columns: 1fr 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+    .form-grid .span2 { grid-column: span 1; }
+    header { padding: 0 16px; }
+    .header-logo span { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading"><div class="spinner"></div></div>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+      </svg>
+      <span>Pagos Red</span>
+    </div>
+    <p class="login-subtitle">Acceso al panel de administración</p>
+    <div class="form-group">
+      <label>Correo electrónico</label>
+      <input type="email" id="login-email" placeholder="admin@ejemplo.com" autocomplete="email">
+    </div>
+    <div class="form-group">
+      <label>Contraseña</label>
+      <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn-primary" id="btn-login">Iniciar sesión</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <header>
+    <div class="header-left">
+      <div class="header-logo">
+        <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+        <span>Pagos Red</span>
+      </div>
+      <select class="year-select" id="year-select"></select>
+    </div>
+    <div class="header-right">
+      <button class="btn-add" id="btn-add-client">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        Cliente
+      </button>
+      <button class="btn-toggle-inactive" id="btn-toggle-inactive">Inactivos</button>
+      <button class="btn-logout" id="btn-logout">Salir</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="summary-bar">
+      <div class="summary-card"><div class="label">Clientes activos</div><div class="value blue" id="sum-activos">—</div></div>
+      <div class="summary-card"><div class="label">Cobrado este año</div><div class="value green" id="sum-cobrado">—</div></div>
+      <div class="summary-card"><div class="label">Pendiente este año</div><div class="value red" id="sum-pendiente">—</div></div>
+      <div class="summary-card"><div class="label">Mes actual</div><div class="value blue" id="sum-mes">—</div></div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" id="tab-cards" onclick="switchTab('cards')">Tarjetas</button>
+      <button class="tab-btn" id="tab-table" onclick="switchTab('table')">Tabla anual</button>
+    </div>
+    <div class="search-wrap" id="search-wrap">
+      <svg class="search-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input type="text" id="search-input" placeholder="Buscar cliente…" autocomplete="off">
+      <div class="autocomplete-dropdown" id="autocomplete"></div>
+    </div>
+    <div id="clients-grid"></div>
+    <div id="table-view">
+      <table id="annual-table"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+    </div>
+  </main>
+</div>
+
+<!-- MODAL: PAGO -->
+<div class="modal-overlay" id="modal-pago">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-pago-title">Registrar pago</span>
+      <button class="modal-close" onclick="closeModal('modal-pago')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="pay-context" id="pay-context"></div>
+      <div class="form-group">
+        <label>Monto a pagar (Q)</label>
+        <div class="monto-row"><input type="number" id="pay-monto" min="0" step="10"></div>
+      </div>
+      <div class="check-row">
+        <input type="checkbox" id="pay-parcial" onchange="toggleParcial()">
+        <label for="pay-parcial">Pago parcial (monto menor a la cuota)</label>
+      </div>
+      <div class="check-row" style="margin-top:8px">
+        <input type="checkbox" id="pay-paused" onchange="togglePaused()">
+        <label for="pay-paused">Servicio pausado (monto 0, sin cobro)</label>
+      </div>
+      <div class="form-group" style="margin-top:14px">
+        <label>Nota (opcional)</label>
+        <input type="text" id="pay-nota" placeholder="Ej: segundo pago parcial, pausa…">
+      </div>
+      <div id="pay-mensaje" style="font-size:0.8rem;color:var(--yellow);margin-top:6px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-pago')">Cancelar</button>
+      <button class="btn-primary" style="width:auto;padding:8px 22px" onclick="guardarPago()">Guardar pago</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: DETALLE DE PAGOS DEL MES -->
+<div class="modal-overlay" id="modal-mes-pagos">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <span class="modal-title" id="mes-pagos-title">Pagos del mes</span>
+      <button class="modal-close" onclick="closeModal('modal-mes-pagos')">✕</button>
+    </div>
+    <div class="modal-body" id="mes-pagos-body"></div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-mes-pagos')">Cerrar</button>
+      <button class="btn-primary" style="width:auto;padding:8px 22px" id="btn-agregar-pago-mes">Agregar pago</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: COMPROBANTE -->
+<div class="modal-overlay" id="modal-receipt">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Comprobante de pago</span>
+      <button class="modal-close" onclick="closeModal('modal-receipt')">✕</button>
+    </div>
+    <div class="receipt-body" id="receipt-content"></div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-receipt')">Cerrar</button>
+      <button class="btn-print" onclick="window.print()">🖨 Imprimir</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CLIENTE -->
+<div class="modal-overlay" id="modal-cliente">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-cliente-title">Nuevo cliente</span>
+      <button class="modal-close" onclick="closeModal('modal-cliente')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="mg span2"><label>Nombre</label><input type="text" id="cl-nombre" placeholder="Nombre del cliente"></div>
+        <div class="mg"><label>WAN / IP CPE</label><input type="text" id="cl-wan" placeholder="192.168.10.xxx"></div>
+        <div class="mg"><label>LAN</label><input type="text" id="cl-lan" placeholder="192.168.xx.1"></div>
+        <div class="mg"><label>Plan</label><input type="text" id="cl-plan" placeholder="Básico, Premium…"></div>
+        <div class="mg"><label>Cuota mensual (Q)</label><input type="number" id="cl-cuota" min="0" step="50" placeholder="150"></div>
+        <div class="mg"><label>Fecha de inicio</label><input type="date" id="cl-fecha"></div>
+        <div class="mg"><label>Estado</label>
+          <select id="cl-activo"><option value="true">Activo</option><option value="false">Inactivo</option></select>
+        </div>
+        <div class="mg span2"><label>Nota interna</label><input type="text" id="cl-nota" placeholder="Observaciones…"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button id="btn-delete-client" class="btn-danger" style="display:none" onclick="deleteCliente()">Eliminar cliente</button>
+      <button class="btn-secondary" onclick="closeModal('modal-cliente')">Cancelar</button>
+      <button class="btn-primary" style="width:auto;padding:8px 22px" onclick="guardarCliente()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: DETALLE CLIENTE -->
+<div class="modal-overlay" id="modal-detalle">
+  <div class="modal" style="max-width:500px;max-height:88vh;display:flex;flex-direction:column;">
+    <div class="modal-header">
+      <span class="modal-title" id="detalle-title">Detalle del cliente</span>
+      <button class="modal-close" onclick="closeModal('modal-detalle')">✕</button>
+    </div>
+    <div class="modal-body" id="detalle-body" style="overflow-y:auto;padding:16px 22px;flex:1;"></div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-detalle')">Cerrar</button>
+      <button class="btn-primary" style="width:auto;padding:8px 22px" id="btn-detalle-editar">Editar cliente</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- Lógica de la aplicación -->
+<script type="module" src="app.js"></script>
+</body>
+</html>
