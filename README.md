@@ -8,7 +8,7 @@ Panel de administración de pagos para red de internet.
 pagos-red/
 ├── index.html                  ← HTML + CSS (se sube al repo)
 ├── app.js                      ← Toda la lógica de la app (se sube al repo)
-├── firebase-config.js          ← ⚠ CREDENCIALES — NO se sube (está en .gitignore)
+├── firebase-config.js          ← ⚠
 ├── firebase-config.example.js  ← Plantilla vacía (se sube como referencia)
 ├── .gitignore
 └── README.md
