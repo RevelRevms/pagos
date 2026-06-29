@@ -1,0 +1,10 @@
+# Credenciales Firebase — NO subir
+firebase-config.js
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Editores
+.vscode/
+.idea/
